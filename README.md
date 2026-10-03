@@ -9,7 +9,7 @@ It is the first of three firmwares on the same shared core
 
 | Tier | Firmware | What it adds |
 |---|---|---|
-| Base | **Stackchan Gemini** (this) | The robot and Gemini: face, voice, head, light bars, senses, themes |
+| Base | **Stackchan Gemini** (this) | The robot and Gemini: face, voice, head, light bars, senses, camera / photo booth, themes |
 | Mid | Stackchan Roombot | Bedroom apps: clock, alarms, calendar, lights, media, photo booth (a PC hub) |
 | Top | Stackchan Server Bot | A home-server coworker: dashboards, ring language, ID cards (a server desk) |
 
@@ -36,9 +36,10 @@ between them over Wi-Fi and keep its Wi-Fi, Gemini key and calibration.
   Wi-Fi setup pages, OTA updates over Wi-Fi, and a LAN remote-control API
   (`/api/gemini/*`) for testing.
 
-Not here yet: the camera, the SD card and NFC cards. Today they are
-Roombot code (photo booth, NFC action cards); they move into the shared
-core, and so into this base tier, when Roombot moves onto the core.
+- **Photo booth:** the camera (GC0308) takes a picture of you to decorate
+  with stickers; photos and sticker packs live on the microSD card.
+
+NFC action cards are Roombot's (they drive its media, lights and alarms).
 
 ## Build
 
