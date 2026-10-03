@@ -1,0 +1,198 @@
+# Common defaults for stackchan-idf (target-independent).
+# Per-target overrides live in sdkconfig.defaults.<target>.
+
+# OTA-friendly partition layout (see partitions.csv).
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+CONFIG_PARTITION_TABLE_TWO_OTA=n
+CONFIG_PARTITION_TABLE_SINGLE_APP=n
+
+# Bootloader rollback.
+CONFIG_BOOTLOADER_APP_ROLLBACK_ENABLE=y
+
+# Avatar renders at 30 fps from a PSRAM canvas — favour speed over size.
+CONFIG_COMPILER_OPTIMIZATION_PERF=y
+
+# Logging.
+CONFIG_LOG_DEFAULT_LEVEL_INFO=y
+
+# Main task (runs app_main → demo_loop forever, incl. jtts babble synthesis).
+# Measured peak use is ~3.9 KiB (diag_stack_hwm 2026-06-12: HWM=8432 of
+# 12288); 8 KiB leaves >4 KiB margin. The previous 12 KiB was budgeted for a
+# BLE-provisioning (protocomm) flow that no longer exists in this firmware.
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=8192
+
+# Millisecond-granularity scheduling for the 33 ms / 20 ms task loops.
+CONFIG_FREERTOS_HZ=1000
+
+# Bluetooth (NimBLE) — custom BLE settings GATT service, always-on advertising.
+# ESP32-S3 defaults the BT host to Bluedroid; disable that and pick NimBLE.
+CONFIG_BT_ENABLED=y
+CONFIG_BT_CONTROLLER_ENABLED=y
+# CONFIG_BT_BLUEDROID_ENABLED is not set
+CONFIG_BT_NIMBLE_ENABLED=y
+
+# NimBLE tuning: single connection, opportunistic Just Works pairing with
+# Secure Connections. Bonds are persisted to NVS so a paired host reconnects
+# without re-pairing after a device reboot (Apply triggers a reboot).
+CONFIG_BT_NIMBLE_MAX_CONNECTIONS=1
+CONFIG_BT_NIMBLE_MAX_BONDS=3
+CONFIG_BT_NIMBLE_SM_SC=y
+CONFIG_BT_NIMBLE_SECURITY_ENABLE=y
+CONFIG_BT_NIMBLE_NVS_PERSIST=y
+
+# Required for components/config_service/crypto.cpp (X25519 + AES-256-GCM
+# application-layer encryption). HKDF is off by default in IDF's mbedtls.
+CONFIG_MBEDTLS_HKDF_C=y
+
+# OTA over BLE pushes 512B chunks through cJSON parsing + esp_ota_write +
+# SPI-flash drivers on the NimBLE host task. The 4 KiB default leaves no
+# headroom and overflowed once chunked writes started landing. 8 KiB matches
+# what the bleprph OTA examples use and gives a comfortable margin.
+CONFIG_BT_NIMBLE_HOST_TASK_STACK_SIZE=8192
+CONFIG_BT_NIMBLE_TASK_STACK_SIZE=8192
+
+# Push memory-hungry users to PSRAM. The OpenAI Realtime conversation pulls a
+# 24 kHz pcm16 stream through a TLS WebSocket; with mbedtls keeping its
+# handshake / record buffers in internal RAM by default the device sat at
+# ~67 B of internal heap during peak, which made the next handshake's RSA /
+# AES allocations fail at random. The three switches below let the wifi /
+# lwIP / mbedtls layers fall back to PSRAM for the large transient buffers.
+CONFIG_SPIRAM_TRY_ALLOCATE_WIFI_LWIP=y
+CONFIG_MBEDTLS_EXTERNAL_MEM_ALLOC=y
+CONFIG_MBEDTLS_DYNAMIC_BUFFER=y
+
+# Default 16 KiB keeps every allocation < 16 KiB pinned to internal RAM
+# first, which fragments internal SRAM heavily and starves the AES hardware
+# DMA descriptor allocator (esp-aes "Failed to allocate memory") during
+# Gemini WS reconnects. 256 B means only genuinely small allocations
+# (FreeRTOS queues, sockaddr_in, etc.) prefer internal; std::string /
+# WebSocket buffers / TLS scratch land in PSRAM (and cJSON nodes via
+# cJSON_InitHooks in app_main), leaving the internal heap contiguous
+# enough for the AES DMA bounce buffers to slot in. Was 1 KiB.
+CONFIG_SPIRAM_MALLOC_ALWAYSINTERNAL=256
+
+# Keep hardware AES on (ESP32-S3 doesn't expose hardware-accelerated GCM
+# — GHASH is always done in software here regardless of config). The AES
+# block operation uses a small DMA descriptor in internal RAM; the
+# ALWAYSINTERNAL bump above is what keeps that allocation reliable under
+# WebSocket reconnect pressure.
+CONFIG_MBEDTLS_HARDWARE_AES=y
+
+# Bump the preferred ATT MTU to the maximum (517 bytes). Default is 256,
+# which forces our 508 B encrypted OTA chunks through a 3-frame Prepared
+# Write per chunk; with MTU 517 the chunk fits in a single
+# ATT_WRITE_REQ / ATT_WRITE_CMD, removing 2 RTTs per chunk. Combined
+# with the WRITE_NO_RSP flag on OtaData this is what makes pipelined
+# OTA possible.
+CONFIG_BT_NIMBLE_ATT_PREFERRED_MTU=517
+
+# HTTP server URI handler defaults are too small once wifi_config_service
+# registers ~20 routes plus the static root. Raise the cap so http_server
+# initialisation doesn't silently drop late registrations.
+CONFIG_HTTPD_MAX_URI_LEN=128
+
+# Chrome's HTTP request headers (Sec-CH-UA-*, Accept, User-Agent, Cookie,
+# Origin, Referer) routinely exceed 1 KiB. The default 512 B cap triggers
+# "Header fields are too long" 431 responses from esp_http_server. 4 KiB
+# leaves plenty of headroom for Chrome's growing client-hint set.
+CONFIG_HTTPD_MAX_REQ_HDR_LEN=4096
+
+# Use the BSD-socket networking backend for mDNS instead of the legacy raw-lwIP
+# path. With the raw path + Wi-Fi (and IPv6 enabled, so mDNS also joins the
+# IPv6 group) the IPv4 mDNS group 224.0.0.251 stops being delivered to the
+# station — its multicast MAC never makes it into the Wi-Fi RX filter, so the
+# responder never sees multicast queries and `stackchan-XXXXXX.local` won't
+# resolve (unicast / HTTP / RTP still work). A plain BSD socket joining the
+# same group receives it fine, so the socket backend fixes reception.
+CONFIG_MDNS_NETWORKING_SOCKET=y
+
+# Advertise preferred connection parameters via the GAP service so the
+# central can pick a tight interval from the start. Values are in
+# 1.25 ms units: 12–24 = 15–30 ms. Combined with the active update
+# we issue in BLE_GAP_EVENT_CONNECT (config_service.cpp) this drops
+# the typical 30–50 ms Chrome default to ~15 ms, which is the single
+# biggest lever on OTA throughput. Supervision timeout 400 = 4 s.
+# 6 × 1.25 ms = 7.5 ms minimum, 12 × 1.25 ms = 15 ms max. The audio streamer
+# wants the tightest CI the central can stomach; if the peer narrows the
+# range we'll still end up at whatever it accepts. Without this we landed
+# at 30 ms which capped throughput at ~5 KiB/s.
+CONFIG_BT_NIMBLE_SVC_GAP_PPCP_MIN_CONN_INTERVAL=6
+CONFIG_BT_NIMBLE_SVC_GAP_PPCP_MAX_CONN_INTERVAL=12
+CONFIG_BT_NIMBLE_SVC_GAP_PPCP_SLAVE_LATENCY=0
+CONFIG_BT_NIMBLE_SVC_GAP_PPCP_SUPERVISION_TMO=400
+
+# Free internal (DMA-capable) RAM for the esp-aes hardware accelerator.
+# Symptom: after a Gemini WebSocket transport error, the reconnect's TLS
+# handshake fails with "esp-aes: Failed to allocate memory" → SSL write
+# error → immediate disconnect, looping forever. Cause: internal heap
+# largest-free-block stuck at ~6.6 KiB because Wi-Fi static RX buffers +
+# NimBLE ACL pool consume most DMA-capable SRAM. Trimming both reclaims
+# ~10 KiB of contiguous internal RAM, enough for the AES DMA descriptor +
+# transient mbedtls handshake buffers.
+#   - Static RX 10 → 6: 4 × ~1.6 KiB internal DMA buffers freed. 6 is
+#     still ample for a single STA streaming ~12 KiB/s of audio.
+# NimBLE ACL stays at the IDF default (24). An earlier 16 here cut BLE
+# audio RX headroom for no real benefit once ALWAYSINTERNAL=1024 freed the
+# internal heap; the real esp-aes fix is the ALWAYSINTERNAL value, not
+# trimming ACL buffers.
+CONFIG_ESP_WIFI_STATIC_RX_BUFFER_NUM=6
+# IDF enforces WIFI_RX_BA_WIN <= 2 × WIFI_STATIC_RX_BUFFER_NUM at compile
+# time (esp_wifi/src/wifi_init.c). With static RX dropped to 6 the window
+# must be <= 12; pin it to 6 (the conservative default) so a fresh build
+# from defaults doesn't trip the #error.
+CONFIG_ESP_WIFI_RX_BA_WIN=6
+
+# TLS handshake internal-RAM peak reduction. The reconnect path was still
+# failing with "esp-aes: Failed to allocate memory": the recover-wait gate
+# saw 24 KiB largest-free, but the handshake itself cratered internal RAM
+# to ~5.6 KiB and the first post-handshake AES write failed. Root cause is
+# the esp-aes hardware path bouncing the (PSRAM-resident) TLS record into a
+# DMA-capable *internal* buffer sized to the record. With
+# SSL_IN_CONTENT_LEN=16384 that bounce is up to 16 KiB.
+#   - Halve the inbound record to 8 KiB. Google / OpenAI cert chains are
+#     ~3-4 KiB so they still fit; the AES bounce peak drops ~8 KiB.
+#   - Free private-key / DHM data mid-handshake (no client cert here so
+#     it's mostly the DHM scratch, but every KiB helps the peak).
+CONFIG_MBEDTLS_SSL_IN_CONTENT_LEN=8192
+CONFIG_MBEDTLS_DYNAMIC_FREE_CONFIG_DATA=y
+
+# SRAM-shortage diagnostics: enable uxTaskGetSystemState() so main/diag.cpp
+# can dump per-task stack high-water marks (the data the stack-size budget
+# decisions are based on — guessing sizes broke boot twice, see plan notes).
+# TCB cost is a few tens of bytes per task; ~10 tasks ≈ <1 KiB internal RAM.
+CONFIG_FREERTOS_USE_TRACE_FACILITY=y
+
+# Wi-Fi static TX buffers are DMA-capable internal RAM, ~1.6 KiB each.
+# 16 was ~25.6 KiB of the exact pool conversation_task's seg_buf_ and the
+# TLS/esp-aes bounce buffers fight over at boot (measured: Wi-Fi bring-up
+# consumed ~39 KiB in the 2 s before conv-task init, leaving largest=7.6 KiB
+# and failing an 8 KiB alloc). Gemini Live keeps <6 frames in flight
+# (TX BA window = 6), so 10 buffers is still comfortable; failure mode if
+# exhausted is a TCP retransmit (latency, not loss).
+CONFIG_ESP_WIFI_STATIC_TX_BUFFER_NUM=10
+
+# Timezone: set yours in sdkconfig.defaults.local.
+CONFIG_STACKCHAN_TIMEZONE="UTC0"
+
+# Roombot media streaming needs ~140 KB/s; a 5.7 KB window caps TCP at about
+# 115 KB/s on this Wi-Fi. lwIP buffers are PSRAM-backed (LWIP prefer SPIRAM).
+CONFIG_LWIP_TCP_WND_DEFAULT=24576
+CONFIG_LWIP_TCP_RECVMBOX_SIZE=24
+
+# 240 MHz: JPEG decode for Roombot video is CPU-bound (160 was the IDF default).
+CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_240=y
+
+# ── RAM budget (see CLAUDE.md "RAM budget") ─────────────────────────────────
+# Bluetooth is on-demand (main/bluetooth.cpp); while it's on, keep its host
+# pools in PSRAM and only the roles we use (a peripheral that advertises).
+CONFIG_BT_NIMBLE_MEM_ALLOC_MODE_EXTERNAL=y
+# CONFIG_BT_NIMBLE_ROLE_CENTRAL is not set
+# CONFIG_BT_NIMBLE_ROLE_OBSERVER is not set
+CONFIG_BT_CTRL_BLE_MAX_ACT=2
+# mDNS task + state in PSRAM (it only answers stackchan-*.local queries).
+CONFIG_MDNS_TASK_CREATE_FROM_SPIRAM=y
+CONFIG_MDNS_MEMORY_ALLOC_SPIRAM=y
+# Out-of-order segments each pin a 1.6 KB Wi-Fi RX buffer in internal RAM;
+# 0 meant unlimited.
+CONFIG_LWIP_TCP_OOSEQ_MAX_PBUFS=4

@@ -1,0 +1,24 @@
+PLAN.md
+
+build/
+build-*/
+
+sdkconfig
+sdkconfig.old
+sdkconfig.defaults.local
+sdkconfig.defaults.*.local
+
+managed_components/
+
+# Pinned PROJECT_VER override. Local builds use git_describe directly.
+version.txt
+
+Makefile.local
+
+*.swp
+*.swo
+.DS_Store
+.vscode/
+.idea/
+
+node_modules/

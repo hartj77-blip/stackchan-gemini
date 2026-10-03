@@ -1,0 +1,44 @@
+Stackchan Gemini firmware
+=========================
+
+This project is a derivative work of **stackchan-idf**, an ESP-IDF firmware
+for M5Stack CoreS3 Stack-chan written by Kenta IDA.
+
+  Upstream:  https://github.com/ciniml/stackchan-idf
+  Fork used: https://github.com/mongonta0716/stackchan-idf
+  License:   Boost Software License 1.0
+
+The overwhelming majority of the source in this repository — the avatar
+renderer and its DSL virtual machine, the SCS0009 servo driver, the CoreS3
+board bring-up, the Gemini Live conversation client, the BLE GATT and Wi-Fi
+HTTP settings services, and the build system — is Kenta IDA's work, carried
+over under the Boost Software License 1.0 and still carrying its original
+SPDX headers.
+
+Changes made in this repository relative to upstream:
+
+  * Gemini Live is the only conversation backend. The OpenAI Realtime,
+    XiaoZhi and local-PC-server backends and their configuration surfaces
+    were removed.
+  * An ambient status HUD composited over the avatar face, plus a
+    human-first rewrite of the on-device Chat and Info tabs.
+  * The feature set was cut back to four things — face, LED control, Gemini
+    conversation and servo control — by removing NFC/PN532, the GC0308
+    camera and QR scanner, Wi-Fi RTP audio receive, BLE audio streaming,
+    the Telegram probe, the lightning-talk timer, the AtomS3R board variant
+    and assorted bring-up diagnostics.
+
+Stackchan Gemini is the base tier built on the shared Stack-chan core
+(core/, stackchan-core), the robot app collected from Stackchan Roombot and
+Stackchan Server Bot by the same author.
+
+Bundled dependencies keep their own licenses:
+
+  core/components/M5Unified            MIT      (c) M5Stack
+  core/components/M5GFX                FreeBSD  (c) M5Stack / lovyan03
+  core/components/tl_expected/expected CC0-1.0  (c) Sy Brand
+  core/components/M5Unit-NFC           MIT      (c) M5Stack (vendored, see VENDORED.md)
+  core/components/M5UnitUnified        MIT      (c) M5Stack (vendored)
+  core/components/M5Utility            MIT      (c) M5Stack (vendored)
+  core/components/M5HAL                MIT      (c) M5Stack (vendored)
+  managed_components/*                     see each component's LICENSE
