@@ -196,3 +196,15 @@ CONFIG_MDNS_MEMORY_ALLOC_SPIRAM=y
 # Out-of-order segments each pin a 1.6 KB Wi-Fi RX buffer in internal RAM;
 # 0 meant unlimited.
 CONFIG_LWIP_TCP_OOSEQ_MAX_PBUFS=4
+
+# SD music (core stackchan_media) decodes MP3, AAC / M4A (+ ALAC), FLAC,
+# Ogg Vorbis / Opus and WAV. The decoders it never asks for stay out of
+# the app image (register_default links every enabled one).
+CONFIG_AUDIO_DECODER_G711_SUPPORT=n
+CONFIG_AUDIO_DECODER_AMRNB_SUPPORT=n
+CONFIG_AUDIO_DECODER_AMRWB_SUPPORT=n
+CONFIG_AUDIO_DECODER_ADPCM_SUPPORT=n
+CONFIG_AUDIO_DECODER_SBC_SUPPORT=n
+CONFIG_AUDIO_DECODER_LC3_SUPPORT=n
+CONFIG_AUDIO_DECODER_G722_SUPPORT=n
+CONFIG_AUDIO_SIMPLE_DEC_TS_SUPPORT=n

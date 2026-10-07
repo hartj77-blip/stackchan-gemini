@@ -10,8 +10,14 @@ themes, tools and the remote API are all documented there.
 
 - `main/app_main.cpp`: the tier's hooks (`tier::Hooks`, name `gemini`, so
   the remote API is `/api/gemini/*`), the photo booth (the core's opt-in
-  `stackchan_photo`; its camera / FATFS lines are in `sdkconfig.defaults.cores3`)
-  and its launcher places. Nothing else.
+  `stackchan_photo`; its camera / FATFS lines are in `sdkconfig.defaults.cores3`),
+  music from the SD card (`stackchan_media`: the Music app, `play_media` /
+  `media_control`, POST `play` / `control`), NFC cards (`stackchan_nfc`:
+  written cards only, there's no PC to link them) and its launcher places.
+  Nothing else.
+- Songs go in `music/` on the card: a card reader, or
+  `core/tools/sd_push.py push <folder>` (`STACKCHAN_TOKEN` = the remote token).
+  `sdkconfig.defaults` leaves out the audio decoders it never uses.
 - `partitions.csv` is a symlink to `core/partitions.csv`.
 - `sdkconfig.defaults.local` / `Makefile.local` (gitignored): timezone,
   `CONFIG_STACKCHAN_REMOTE_TOKEN`, IDF path, port.
