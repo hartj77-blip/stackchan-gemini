@@ -83,12 +83,6 @@ extern "C" void app_main()
     hooks.strip_tap = [] { app::media_ui::open_player(); };
     hooks.busy = [] { return app::media::active(); };
     hooks.quiet_glow = [] { return app::media::active(); };
-    // A right-half swipe on the face: back to the player while something plays.
-    hooks.resume = [] {
-        if (!app::media::active()) return false;
-        app::media_ui::open_player();
-        return true;
-    };
     // Music playing minimised holds the mic, so a pat pauses it first.
     hooks.listen_opened = [] {
         if (app::media::playing()) app::media::pause_for_talk();
