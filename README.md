@@ -177,19 +177,27 @@ new image doesn't come up, the bootloader rolls back to the old one.
 
 ### Control it from a browser
 
-`http://<robot-ip>/` is also a remote control (it asks for the remote
-token if you set one). Under **Remote Control** you get the robot's screen
-live, and you can tap and swipe on it as if you were touching the robot.
-Below it: the assistant on or off, spoken replies on or off, always
-listening, "say this" and "ask it this" boxes, voice volume; the head
-(mode, look up / down / left / right, exact turn and tilt), dance and
-wave; the six faces; music and video from the SD card with pause, skip,
-stop and volume; screen brightness; and a button for every app.
+Open `http://<robot-ip>/` on a phone or PC. The page has three tabs:
+
+- **Control** (where it opens): the robot's screen live, which you can tap
+  and swipe as if you were touching the robot; music and video from the SD
+  card with pause, skip, stop and volume; the assistant on or off, spoken
+  replies, always listening, "say this" and "ask it this"; the head (look
+  around, exact turn and tilt), dance and wave; the six faces; the lights;
+  screen brightness; a button for every app.
+- **NFC cards**: make, try, write and keep cards (next section).
+- **Setup**: what can't be set on the robot itself: Wi-Fi, the Gemini key,
+  its voice and personality, firmware updates. A robot with no Gemini key
+  yet opens here.
+
+If you gave the robot a remote token, the page shows **Connect** the first
+time: press it, then tap **Allow** on the robot's screen. No typing, once
+per browser.
 
 ### Make NFC cards
 
 Any NTAG213 / 215 / 216 card or sticker works. Open `http://<robot-ip>/`
-on a phone or PC, open **NFC Cards**, and pick what the card should do:
+on a phone or PC, go to the **NFC cards** tab, and pick what the card should do:
 say a phrase you type, ask Gemini a question, play music or a video from
 the SD card, set the lights, a face, the volume, open an app. **Add as a
 step** makes a card that does several things in a row. Then:
