@@ -34,8 +34,8 @@ between them over Wi-Fi and keep its Wi-Fi, Gemini key and calibration.
 - **Four UI themes:** Default, Aqua (Mac OS X), Luna (Windows XP) and
   Terminal (btop on a CRT). Settings > Display > Theme.
 - **Settings** on the robot, a quick panel (top-right corner), Bluetooth and
-  Wi-Fi setup pages, OTA updates over Wi-Fi, and a LAN remote-control API
-  (`/api/gemini/*`) for testing.
+  Wi-Fi setup pages, OTA updates over Wi-Fi, a remote control in the
+  robot's own web page, and a LAN remote-control API (`/api/gemini/*`).
 - **Photo booth:** the camera (GC0308) takes a picture of you to decorate
   with stickers; photos and sticker packs live on the microSD card.
 - **Music from the SD card:** MP3, M4A / M4B, FLAC, WAV and Ogg Vorbis /
@@ -174,6 +174,17 @@ make update HOST=<robot-ip>
 
 The robot reboots into the new firmware and keeps its settings; if the
 new image doesn't come up, the bootloader rolls back to the old one.
+
+### Control it from a browser
+
+`http://<robot-ip>/` is also a remote control (it asks for the remote
+token if you set one). Under **Remote Control** you get the robot's screen
+live, and you can tap and swipe on it as if you were touching the robot.
+Below it: the assistant on or off, spoken replies on or off, always
+listening, "say this" and "ask it this" boxes, voice volume; the head
+(mode, look up / down / left / right, exact turn and tilt), dance and
+wave; the six faces; music and video from the SD card with pause, skip,
+stop and volume; screen brightness; and a button for every app.
 
 ### Make NFC cards
 
