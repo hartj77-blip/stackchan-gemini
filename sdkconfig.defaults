@@ -162,6 +162,9 @@ CONFIG_MBEDTLS_DYNAMIC_FREE_CONFIG_DATA=y
 # decisions are based on — guessing sizes broke boot twice, see plan notes).
 # TCB cost is a few tens of bytes per task; ~10 tasks ≈ <1 KiB internal RAM.
 CONFIG_FREERTOS_USE_TRACE_FACILITY=y
+# Per-task CPU time for GET /api/gemini/diag?cpu=1 (where the cores' time goes).
+CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS=y
+CONFIG_FREERTOS_VTASKLIST_INCLUDE_COREID=y
 
 # Wi-Fi static TX buffers are DMA-capable internal RAM, ~1.6 KiB each.
 # 16 was ~25.6 KiB of the exact pool conversation_task's seg_buf_ and the
