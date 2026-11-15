@@ -45,6 +45,11 @@ between them over Wi-Fi and keep its Wi-Fi, Gemini key and calibration.
 - **NFC cards:** tap a card and the robot plays music, dances, opens an app
   or says something; the NFC cards app writes them.
 
+The firmware image itself carries no stickers or songs: they live on the
+microSD card. [`sdcard/`](sdcard/) has a free starter set to copy onto it:
+26 photo booth stickers and frames, and a public-domain (CC0) Bach
+recording.
+
 ## Get it running
 
 You need an M5Stack CoreS3 on a Stack-chan body, a USB-C cable, a 2.4 GHz
