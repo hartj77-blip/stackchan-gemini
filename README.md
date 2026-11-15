@@ -45,7 +45,20 @@ between them over Wi-Fi and keep its Wi-Fi, Gemini key and calibration.
 - **NFC cards:** tap a card and the robot plays music, dances, opens an app
   or says something; the NFC cards app writes them.
 
-## Build
+## Get it running
+
+You need an M5Stack CoreS3 on a Stack-chan body, a USB-C cable, a 2.4 GHz
+Wi-Fi network and a free Gemini API key.
+
+### 1. Get a Gemini API key
+
+Sign in at [Google AI Studio](https://aistudio.google.com/apikey), press
+**Create API key** and copy it (it starts with `AIza`). The robot talks to
+Gemini Live with it directly; there is no server in between. Keep it out
+of git: it only ever goes into the gitignored file below or into the
+robot's own settings.
+
+### 2. Build
 
 Needs [ESP-IDF 5.4](https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32s3/get-started/)
 (the Makefile looks for it in `~/esp/esp-idf`; set `IDF_PATH` in
@@ -56,32 +69,87 @@ git clone --recursive https://github.com/hartj77-blip/stackchan-gemini.git
 cd stackchan-gemini
 git submodule update --init --recursive   # if you cloned without --recursive
 core/tools/apply-m5-patches.sh   # M5Unified one-line fix for GCC 14
+```
+
+Then link your Wi-Fi and Gemini key. The easy way is to build them in:
+create `sdkconfig.defaults.local` (gitignored, never committed) next to
+the Makefile:
+
+```
+CONFIG_STACKCHAN_WIFI_SSID="your network"
+CONFIG_STACKCHAN_WIFI_PASSWORD="your password"
+CONFIG_STACKCHAN_GEMINI_API_KEY="AIza..."
+CONFIG_STACKCHAN_TIMEZONE="EST5EDT,M3.2.0,M11.1.0"
+```
+
+The timezone is a POSIX string (that one is US Eastern; `JST-9` is Japan;
+the default is UTC). You can also add `CONFIG_STACKCHAN_REMOTE_TOKEN="..."`
+to put a password on the remote-control API (empty = open to your LAN).
+These are fallbacks for a robot that has nothing saved yet: anything set
+later in the robot's settings wins.
+
+```sh
 make set-target                  # first time only
 make build
 ```
 
-Optional machine-only settings go in `sdkconfig.defaults.local`
-(gitignored), e.g. `CONFIG_STACKCHAN_TIMEZONE` and
-`CONFIG_STACKCHAN_REMOTE_TOKEN` (a token for the remote API; empty = open
-to your LAN).
+### 3. Flash it (first time: USB)
 
-## Install
-
-First time, over USB (keeps settings already in flash):
+Plug the CoreS3 in by USB-C and:
 
 ```sh
-make flash PORT=/dev/ttyACM0
+make flash                       # or: make flash PORT=/dev/ttyACM0
 ```
 
-After that, over Wi-Fi:
+This writes the bootloader, the partition table, the firmware and the
+face assets, and keeps settings already in flash. If the port isn't found
+or the upload won't start, hold the CoreS3's reset button for about three
+seconds until the green light comes on (download mode), flash again, then
+press reset once.
+
+The robot boots, joins your Wi-Fi and its status line shows Gemini
+connecting. Pat its head and talk.
+
+### 4. Link Wi-Fi or Gemini without rebuilding
+
+If you left them out of the build, or want to change them later:
+
+- **On Wi-Fi already:** open `http://<robot-ip>/` in a browser (the
+  address is in Settings on the robot, and it also answers at
+  `stackchan-xxxxxx.local`). Fill in **Gemini API Key** (and the Wi-Fi
+  fields, the voice or a persona if you like) and save.
+- **No Wi-Fi yet:** the robot switches Bluetooth on by itself 30 seconds
+  after a boot without Wi-Fi (or use the Bluetooth switch in Settings).
+  Open `core/tools/settings.html` from your clone in desktop Chrome or
+  Edge (133 or newer; Firefox and Safari can't do Web Bluetooth), connect
+  to the robot and fill in **Wi-Fi SSID**, the Wi-Fi password and the
+  **Gemini API** key. That page is still in Japanese (it comes from
+  upstream stackchan-idf); the three fields are the first three on it.
+  The link is encrypted per connection; no pairing is needed.
+
+Wi-Fi, the Gemini key and the servo calibration live in the robot's
+settings storage (NVS). **Don't erase flash** (`make erase-flash`) unless
+you want to set them up again.
+
+### 5. Updates over Wi-Fi
+
+After the first flash you don't need the cable:
 
 ```sh
+make build
 script/ota_wifi.py <robot-ip>
 ```
 
-Wi-Fi and the Gemini API key are set from the robot's Bluetooth or web
-settings page and live in NVS. **Don't erase flash** unless you want to set
-them up again.
+The robot reboots into the new firmware and keeps its settings; if the
+new image doesn't come up, the bootloader rolls back to the old one.
+
+### If Gemini doesn't answer
+
+- "Waiting for Wi-Fi": the network name or password is wrong, or the
+  network is 5 GHz only.
+- Connected but silent: check the key at AI Studio. A free key has a
+  quota; "You exceeded your current quota" in the log
+  (`http://<robot-ip>/api/gemini/log`) means wait or use another key.
 
 ## License
 
