@@ -36,13 +36,25 @@ ifneq (,$(wildcard sdkconfig.defaults.local))
 SDKCONFIG_DEFAULTS_HW  := $(SDKCONFIG_DEFAULTS_HW);sdkconfig.defaults.local
 endif
 
-.PHONY: build clean set-target flash flash-monitor monitor monitor-log erase-flash \
+.PHONY: build clean set-target flash flash-monitor monitor monitor-log erase-flash sdcard update \
         build-docker docker-shell docker-clean
 
 
 # Capture serial output non-interactively (for CI / agent contexts where
 # idf.py monitor refuses to attach without a TTY). SECONDS defaults to 8.
 MONITOR_LOG_SECONDS ?= 8
+
+# --- Over Wi-Fi (HOST = the robot's address, or $STACKCHAN_HOST) ------------
+
+HOST ?= $(STACKCHAN_HOST)
+
+# The starter card (sdcard/: stickers, a song, a video) onto the robot's microSD.
+sdcard:
+	STACKCHAN_HOST=$(HOST) python3 core/tools/sd_push.py push sdcard
+
+# Build and send the firmware over Wi-Fi (after the first USB flash).
+update: build
+	python3 script/ota_wifi.py $(HOST)
 
 # --- Target builds ----------------------------------------------------------
 

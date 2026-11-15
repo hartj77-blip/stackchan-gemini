@@ -10,7 +10,7 @@ It is the first of three firmwares on the same shared core
 
 | Tier | Firmware | What it adds |
 |---|---|---|
-| Base | **Stackchan Gemini** (this) | The robot and Gemini: face, voice, head, light bars, senses, camera / photo booth, SD-card music, NFC cards, themes |
+| Base | **Stackchan Gemini** (this) | The robot and Gemini: face, voice, head, light bars, senses, camera / photo booth, SD-card music and videos, NFC cards, themes |
 | Mid | Stackchan Roombot | Bedroom apps: clock, alarms, calendar, lights, media, photo booth (a PC hub) |
 | Top | Stackchan Server Bot | A home-server coworker: dashboards, ring language, ID cards (a server desk) |
 
@@ -42,13 +42,18 @@ between them over Wi-Fi and keep its Wi-Fi, Gemini key and calibration.
   Opus from `music/` on the card (FAT32, 32 GB or less), with a Music app, a
   themed player and "play ..." by voice. Copy songs with a card reader or
   over Wi-Fi with `core/tools/sd_push.py`.
+- **Videos from the SD card:** the Videos app plays clips full screen with
+  sound, and "play the Apollo video" works by voice. Any video file works:
+  `core/tools/sd_push.py push holiday.mp4` converts it for the robot's
+  320 x 240 screen and sends it over Wi-Fi.
 - **NFC cards:** tap a card and the robot plays music, dances, opens an app
   or says something; the NFC cards app writes them.
 
-The firmware image itself carries no stickers or songs: they live on the
-microSD card. [`sdcard/`](sdcard/) has a free starter set to copy onto it:
-26 photo booth stickers and frames, and a public-domain (CC0) Bach
-recording.
+The firmware image itself carries no stickers, songs or videos: they live
+on the microSD card. [`sdcard/`](sdcard/) has a free starter set, and one
+command puts all of it on the card over Wi-Fi (`make sdcard`, step 5
+below): 26 photo booth stickers and frames, a public-domain (CC0) Bach
+recording, and NASA's film of the Apollo 11 launch.
 
 ## Get it running
 
@@ -136,13 +141,30 @@ Wi-Fi, the Gemini key and the servo calibration live in the robot's
 settings storage (NVS). **Don't erase flash** (`make erase-flash`) unless
 you want to set them up again.
 
-### 5. Updates over Wi-Fi
+### 5. Fill the SD card (optional)
+
+Put a microSD card (FAT32, 32 GB or less) in the robot and send the starter
+set: stickers for the photo booth, a song and a video.
+
+```sh
+make sdcard HOST=<robot-ip>
+```
+
+Your own things go the same way, no converting by hand (videos need
+`ffmpeg` installed on the PC):
+
+```sh
+export STACKCHAN_HOST=<robot-ip>
+core/tools/sd_push.py push ~/Music/"Abbey Road"     # an album folder -> the Music app
+core/tools/sd_push.py push ~/Videos/holiday.mp4     # any video -> the Videos app
+```
+
+### 6. Updates over Wi-Fi
 
 After the first flash you don't need the cable:
 
 ```sh
-make build
-script/ota_wifi.py <robot-ip>
+make update HOST=<robot-ip>
 ```
 
 The robot reboots into the new firmware and keeps its settings; if the
