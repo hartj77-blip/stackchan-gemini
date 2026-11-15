@@ -53,9 +53,8 @@ void init(app::SharedState& state)
                                  [] { return app::photobooth_ui::status(); }, "photobooth"});
     app::launcher::register_app({"NFC cards", "tap to play", rgb(230, 140, 60), [] { app::nfc_ui::open(); }, {}, "nfc"});
 
-    // Desktop icons (Aqua) and start-menu places (Luna).
-    app::launcher::register_place({"photos", "Photos", "photobooth", [] { app::photobooth_ui::open_gallery(); }});
-    app::launcher::register_place({"music", "Music", "media", [] { app::sd_music::open(); }});
+    // Desktop icons (Aqua) and start-menu places (Luna). The photos are in
+    // the Photo Booth; Music, Videos and Now Playing are apps.
     app::launcher::register_place({"settings", "Settings", "settings", [] { app::settings::open(); }});
     app::launcher::register_place({"head", "Head", "head", [] { app::head_ui::open(); }});
 }

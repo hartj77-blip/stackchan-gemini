@@ -46,8 +46,10 @@ between them over Wi-Fi and keep its Wi-Fi, Gemini key and calibration.
   sound, and "play the Apollo video" works by voice. Any video file works:
   `core/tools/sd_push.py push holiday.mp4` converts it for the robot's
   320 x 240 screen and sends it over Wi-Fi.
-- **NFC cards:** tap a card and the robot plays music, dances, opens an app
-  or says something; the NFC cards app writes them.
+- **NFC cards:** tap a card and the robot says a phrase, asks Gemini
+  something, plays a song or a video, changes its lights or face, dances, or
+  several of those at once. You make cards without touching code: on the
+  robot (Apps > NFC cards) or from the robot's web page (see below).
 
 The firmware image itself carries no stickers, songs or videos: they live
 on the microSD card. [`sdcard/`](sdcard/) has a free starter set, and one
@@ -150,6 +152,9 @@ set: stickers for the photo booth, a song and a video.
 make sdcard HOST=<robot-ip>
 ```
 
+(If you gave the robot a `CONFIG_STACKCHAN_REMOTE_TOKEN`, first
+`export STACKCHAN_TOKEN=<that token>`.)
+
 Your own things go the same way, no converting by hand (videos need
 `ffmpeg` installed on the PC):
 
@@ -169,6 +174,23 @@ make update HOST=<robot-ip>
 
 The robot reboots into the new firmware and keeps its settings; if the
 new image doesn't come up, the bootloader rolls back to the old one.
+
+### Make NFC cards
+
+Any NTAG213 / 215 / 216 card or sticker works. Open `http://<robot-ip>/`
+on a phone or PC, open **NFC Cards**, and pick what the card should do:
+say a phrase you type, ask Gemini a question, play music or a video from
+the SD card, set the lights, a face, the volume, open an app. **Add as a
+step** makes a card that does several things in a row. Then:
+
+- **Try it now** makes the robot do it straight away.
+- **Write to card**, then hold a card to the robot.
+- **Save to My cards** keeps it on the robot: the saved ones can be tried,
+  written, edited and deleted from the page, and show on the robot under
+  Apps > NFC cards > More > My cards.
+
+The same choices (with built-in phrases) are on the robot's own screen in
+Apps > NFC cards.
 
 ### If Gemini doesn't answer
 
