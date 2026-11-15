@@ -2,7 +2,7 @@
 
 The base tier of three Stack-chan firmwares (Gemini → Roombot → Server Bot)
 for the same M5Stack CoreS3 robot. Almost everything lives in the shared
-core, the `core/` submodule (`~/stackchan-core`): **read `core/CLAUDE.md`
+core, the `core/` submodule (stackchan-core): **read `core/CLAUDE.md`
 first** — code style, hardware, RAM budget, screens, head, LEDs, senses,
 themes, tools and the remote API are all documented there.
 

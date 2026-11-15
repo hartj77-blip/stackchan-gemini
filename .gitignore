@@ -22,3 +22,5 @@ Makefile.local
 .idea/
 
 node_modules/
+
+.claude/

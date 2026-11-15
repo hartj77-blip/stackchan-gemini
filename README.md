@@ -5,11 +5,12 @@ Gemini Live, using everything the robot itself has, with nothing on a PC
 behind it. ESP-IDF 5.4 / C++20.
 
 It is the first of three firmwares on the same shared core
-([stackchan-core](../stackchan-core), the `core/` submodule):
+([stackchan-core](https://github.com/hartj77-blip/stackchan-core), the
+`core/` submodule):
 
 | Tier | Firmware | What it adds |
 |---|---|---|
-| Base | **Stackchan Gemini** (this) | The robot and Gemini: face, voice, head, light bars, senses, camera / photo booth, themes |
+| Base | **Stackchan Gemini** (this) | The robot and Gemini: face, voice, head, light bars, senses, camera / photo booth, SD-card music, NFC cards, themes |
 | Mid | Stackchan Roombot | Bedroom apps: clock, alarms, calendar, lights, media, photo booth (a PC hub) |
 | Top | Stackchan Server Bot | A home-server coworker: dashboards, ring language, ID cards (a server desk) |
 
@@ -35,16 +36,25 @@ between them over Wi-Fi and keep its Wi-Fi, Gemini key and calibration.
 - **Settings** on the robot, a quick panel (top-right corner), Bluetooth and
   Wi-Fi setup pages, OTA updates over Wi-Fi, and a LAN remote-control API
   (`/api/gemini/*`) for testing.
-
 - **Photo booth:** the camera (GC0308) takes a picture of you to decorate
   with stickers; photos and sticker packs live on the microSD card.
-
-NFC action cards are Roombot's (they drive its media, lights and alarms).
+- **Music from the SD card:** MP3, M4A / M4B, FLAC, WAV and Ogg Vorbis /
+  Opus from `music/` on the card (FAT32, 32 GB or less), with a Music app, a
+  themed player and "play ..." by voice. Copy songs with a card reader or
+  over Wi-Fi with `core/tools/sd_push.py`.
+- **NFC cards:** tap a card and the robot plays music, dances, opens an app
+  or says something; the NFC cards app writes them.
 
 ## Build
 
+Needs [ESP-IDF 5.4](https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32s3/get-started/)
+(the Makefile looks for it in `~/esp/esp-idf`; set `IDF_PATH` in
+`Makefile.local` if yours is elsewhere).
+
 ```sh
-git submodule update --init --recursive
+git clone --recursive https://github.com/hartj77-blip/stackchan-gemini.git
+cd stackchan-gemini
+git submodule update --init --recursive   # if you cloned without --recursive
 core/tools/apply-m5-patches.sh   # M5Unified one-line fix for GCC 14
 make set-target                  # first time only
 make build
